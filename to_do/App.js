@@ -9,10 +9,12 @@ import {
   Dimensions,
   Platform,
   state,
-  Image
+  Image,
+  Button,
+  TouchableOpacity
 } from 'react-native';
 
-
+import Voice from 'react-native-voice';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import ToDo from "./ToDo"
@@ -24,19 +26,29 @@ const {height, width} = Dimensions.get("window");
 
 export default class App extends React.Component{
   
-  state = {
-    newToDo : "",
-    loadedToDos : false,
-    toDos : {
-      
-    }
-  };
+  constructor(props){
+    super(props);
+    this.state = {
+      newToDo : "",
+      loadedToDos : false,
+      toDos : {
+        
+      },
+      isRecord : false,
+      text : '',
+      recordicon : '🎙'
+    };
+  }
   componentDidMount= ()=>{
     this._loadedToDos();
+    Voice.onSpeechStart = this._onSpeechStart;
+    Voice.onSpeechEnd = this._onSpeechEnd;
+    Voice.onSpeechResults = this._onSpeechResults;
+    Voice.onSpeechError = this._onSpeechError;
   }
 
   render(){
-    const {newToDo, loadedToDos, toDos } = this.state;
+    const {newToDo, loadedToDos, toDos, isRecord, recordicon} = this.state;
 
     if(!loadedToDos)
       <AppLoading />
@@ -48,17 +60,28 @@ export default class App extends React.Component{
         <Image style={styles.title} source={
           require('./inner.png')} />
         <View style={styles.card}>
-          <TextInput style = {styles.input} 
-          placeholder={"New To Do"} value={newToDo} 
-          onChangeText={this._controlNewToDo}
-          placeholderTextColor={"#999"} 
-          returnKeyType={"done"} 
-          onSubmitEditing = {this._addToDo}
-          />
-         
+          <View style={styles.inputs}>
+            <TextInput style = {styles.input} 
+            placeholder={"New To Do"} value={newToDo} 
+            onChangeText={this._controlNewToDo}
+            placeholderTextColor={"#999"} 
+            returnKeyType={"done"} 
+            multiline={true}
+            onSubmitEditing = {this._addToDo}
+            />
+            <View style = {styles.actionContainer}>
+              <TouchableOpacity onPress={this._onRecordVoice}>
+                  <Text style={styles.actionbutton}>{recordicon}</Text> 
+              </TouchableOpacity>
+              <TouchableOpacity onPress={this._addToDo}>
+                  <Text style={styles.actionbutton}>✔</Text> 
+              </TouchableOpacity>
+            </View>
+
+          </View>
           <ScrollView contentContainerStyle={styles.todos}>
             {Object.entries(toDos).map(([key, value]) =>
-              <View style={styles.day}>
+              <View key = {key} style={styles.day}>
                 <Text style = {styles.category}> {key} </Text>
                 {
                   Object.values(value).map(
@@ -85,7 +108,52 @@ export default class App extends React.Component{
       </>
     );
     };
-    
+
+    setText = (t) =>{
+      
+      this.setState({
+        text : t
+      })
+      this._controlNewToDo(t);
+      console.log(t);
+    }
+     _onSpeechStart = () => {
+      console.log('onSpeechStart');
+      this.setText('');
+    };
+     _onSpeechEnd = () => {
+      console.log('onSpeechEnd');
+    };
+     _onSpeechResults = (event) => {
+      console.log('onSpeechResults');
+      this.setText(event.value[0]);
+    };
+     _onSpeechError = (event) => {
+      console.log('_onSpeechError');
+      console.log(event.error);
+      this.setState({
+        recordicon : '🎙',
+        isRecord : false
+      })
+    };
+  
+     _onRecordVoice = () => {
+      const {isRecord} = this.state;
+      let icon = '';
+      if (isRecord) {
+        Voice.stop();
+        icon = '🎙';
+      } else {
+        Voice.start('ko-KR');
+        icon = '⭕'
+      }
+      this.setState({
+        recordicon : icon,
+        isRecord : !isRecord
+      })
+      
+    };
+
     _loadedToDos = async ()=>{
       try{
         const toDos = await AsyncStorage.getItem("toDos");
@@ -254,7 +322,6 @@ const styles = StyleSheet.create({
     alignItems : "center"
   },
   title:{ 
-    color : "white",
     marginTop : 30,
     marginBottom : 15,
     width : 100,
@@ -281,11 +348,26 @@ const styles = StyleSheet.create({
       }
     })
   },
-  input: {
+  inputs : {
     padding : 20,
     borderBottomColor : "#bbb",
     borderBottomWidth : 1,
+    flexDirection : 'row',
+    justifyContent : 'space-between'
+  },
+  input: {
     fontSize : 25,
+  },
+  actionbutton : {
+    marginTop : 4,
+    marginLeft : 15,
+    paddingVertical : 3,
+    paddingHorizontal : 1,
+    fontSize : 25
+  },
+
+  actionContainer : {
+    flexDirection : "row",
   },
   todos : {
     alignItems : "center"
