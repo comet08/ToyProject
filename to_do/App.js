@@ -11,7 +11,8 @@ import {
   state,
   Image,
   Button,
-  TouchableOpacity
+  TouchableOpacity,
+  Keyboard
 } from 'react-native';
 
 import Voice from 'react-native-voice';
@@ -47,6 +48,7 @@ export default class App extends React.Component{
     Voice.onSpeechError = this._onSpeechError;
   }
 
+
   render(){
     const {newToDo, loadedToDos, toDos, isRecord, recordicon} = this.state;
 
@@ -67,19 +69,21 @@ export default class App extends React.Component{
             placeholderTextColor={"#999"} 
             returnKeyType={"done"} 
             multiline={true}
-            onSubmitEditing = {this._addToDo}
+           
             />
             <View style = {styles.actionContainer}>
               <TouchableOpacity onPress={this._onRecordVoice}>
                   <Text style={styles.actionbutton}>{recordicon}</Text> 
               </TouchableOpacity>
-              <TouchableOpacity onPress={this._addToDo}>
+              <TouchableOpacity onPressOut={this._addToDo}>
                   <Text style={styles.actionbutton}>✔</Text> 
               </TouchableOpacity>
             </View>
 
           </View>
-          <ScrollView contentContainerStyle={styles.todos}>
+          <ScrollView ref = {ref=>{this.scroll = ref}} 
+          contentContainerStyle={styles.todos}
+          onContentSizeChange = {()=>{this.scroll.scrollToEnd();}}>
             {Object.entries(toDos).map(([key, value]) =>
               <View key = {key} style={styles.day}>
                 <Text style = {styles.category}> {key} </Text>
@@ -184,6 +188,8 @@ export default class App extends React.Component{
     }
 
     _addToDo = () =>{
+     Keyboard.dismiss();
+     
       const {newToDo} = this.state;
       this.setState(prevState=>{
         const ID = uuidv4();
@@ -356,6 +362,7 @@ const styles = StyleSheet.create({
     justifyContent : 'space-between'
   },
   input: {
+    width : width/2,
     fontSize : 25,
   },
   actionbutton : {

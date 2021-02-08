@@ -134,7 +134,8 @@ const styles = StyleSheet.create({
         borderColor : "rgb(70,70,150)"
     },
     text:{
-        fontSize : 20,
+        width : width/2 + 21,
+        fontSize : 17,
         fontWeight : "600",
         marginVertical : 20,
         paddingLeft : 5,
@@ -169,11 +170,10 @@ const styles = StyleSheet.create({
         height : 0, width : 0
     },
     input : {
-        width : width/2,
-        fontSize : 20,
+
         marginVertical : 15,
-        paddingTop : 5,
-        paddingBottom : 4.5,
+        paddingTop : 4,
+        paddingBottom : 3.2,
         color: "grey"
     }
 });
